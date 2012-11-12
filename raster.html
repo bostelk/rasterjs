@@ -1,0 +1,76 @@
+
+<html>
+    <body>
+        <script src="raster.js"></script>
+        <script>
+            var requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame ||  window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame;
+            var canvas = document.createElement( 'canvas' );
+            canvas.width = 1024;
+            canvas.height = 512;
+            document.body.appendChild( canvas );
+
+            var canvasWidth = canvas.width;
+            var canvasHeight = canvas.height;
+
+            var context = canvas.getContext( '2d' );
+            var elapsedSeconds = 0;
+            var totalSeconds = 0;
+            var lastframe = 0;
+
+            // get the framebuffer which uses the screen format of: 8-byte rgba, each component is 1-byte.
+            var imagedata = context.getImageData( 0, 0, canvasWidth, canvasHeight );
+            var pbuffer = imagedata.data;
+            var r1 = new Rasterizer(pbuffer, canvasWidth, canvasHeight);
+            r1.init();
+
+            render();
+            lastframe = Date.now();
+            animate();
+
+            function animate() {
+                requestAnimationFrame(animate);
+                elapsedSeconds = (Date.now() - lastframe) / 1000;
+                totalSeconds += elapsedSeconds;
+                render();
+                lastframe = Date.now();
+            }
+
+            function render() {
+                cls(pbuffer, 0x000000ff);
+                draw();
+                context.putImageData(imagedata, 0, 0);
+            }
+
+            function draw() {
+                //drawLineBressenhamSimple(pbuffer, 0, 100, 200, 0, 0xff0000ff);
+                r1.raster();
+            }
+
+            function makeTriangle() {
+                var p = new Polygon();
+                p.addVertex(300,100);
+                p.addVertex(400,100);
+                p.addVertex(300,200);
+                r1.addPolygon(p);
+                return p;
+            }
+
+            function makeRectangle(x1, y1, width, height) {
+                var p = new Polygon();
+                p.addVertex(x1, y1);
+                p.addVertex(x1 + width, y1);
+
+                // switching the order of these two will cause diagonals...
+                p.addVertex(x1 + width, y1 + height);
+                p.addVertex(x1, y1 + height);
+                r1.addPolygon(p);
+                return p;
+            }
+
+            function square() {
+                makeRectangle(100,100, 100, 100);
+            }
+        </script>
+    </body>
+</html>
+
